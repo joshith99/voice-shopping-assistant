@@ -59,6 +59,10 @@
 
 	const itemNames = $derived(items.map((item) => item.name));
 
+	const undoLabel = $derived(
+		undo ? (undo.kind === 'clear' ? 'Restore list?' : `Restore ${undo.item.name}?`) : ''
+	);
+
 	const suggestions = $derived.by(() => {
 		const result: { kind: string; name: string }[] = [];
 		for (const low of runningLow(history, new Date()).slice(0, 2)) {
@@ -395,33 +399,7 @@
 		</div>
 	</header>
 
-	<main class="flex flex-1 flex-col px-5 pb-10 pt-6">
-		<div class="sticky top-0 z-10 -mx-5 flex flex-col items-center gap-4 bg-canvas px-5 py-2">
-			<MicButton state={voiceState} onclick={toggleMic} />
-
-			<p class="min-h-6 text-center text-[15px] leading-snug" aria-live="polite">
-				{#if transcript}
-					<span class="text-ink">“{transcript}”</span>
-				{:else if error}
-					<span class="text-warn">{error}</span>
-				{:else if feedback}
-					<span class="text-accent-ink">{feedback}</span>
-				{:else}
-					<span class="text-muted">Tap the mic and say “add milk”</span>
-				{/if}
-			</p>
-
-			{#if undo}
-				<button
-					type="button"
-					class="rounded-full border border-line bg-surface px-3 py-1 text-sm text-ink hover:border-accent"
-					onclick={undoLast}
-				>
-					Undo
-				</button>
-			{/if}
-		</div>
-
+	<main class="flex flex-1 flex-col px-5 pb-48 pt-6">
 		<form onsubmit={onManualSubmit} class="mb-6">
 			<input
 				type="text"
@@ -491,6 +469,41 @@
 			</ul>
 		{/if}
 	</main>
+</div>
+
+<div class="fixed inset-x-0 bottom-0 z-20 bg-canvas/90 backdrop-blur">
+	<div class="mx-auto w-full max-w-xl px-5 pb-4 pt-2">
+		{#if undo}
+			<div
+				class="mb-2 flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-4 py-2 shadow-lg"
+			>
+				<span class="text-sm text-ink">{undoLabel}</span>
+				<button
+					type="button"
+					class="shrink-0 rounded-full bg-ink px-3 py-1 text-sm font-semibold text-white hover:bg-accent"
+					onclick={undoLast}
+				>
+					Undo
+				</button>
+			</div>
+		{/if}
+
+		<p class="min-h-6 text-center text-[15px] leading-snug" aria-live="polite">
+			{#if transcript}
+				<span class="text-ink">“{transcript}”</span>
+			{:else if error}
+				<span class="text-warn">{error}</span>
+			{:else if feedback}
+				<span class="text-accent-ink">{feedback}</span>
+			{:else}
+				<span class="text-muted">Tap the mic and say “add milk”</span>
+			{/if}
+		</p>
+
+		<div class="mt-2 flex justify-center">
+			<MicButton state={voiceState} onclick={toggleMic} />
+		</div>
+	</div>
 </div>
 
 {#if settingsOpen}

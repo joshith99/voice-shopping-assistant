@@ -28,8 +28,9 @@ Transitions between states are animated (150–250ms) and always resolve to a vi
 Single column, max-width container, phone-first:
 
 - **Top bar** — app name, language selector, settings (one tap to the key screen).
-- **Mic button** — centered, 72px, sticky above the list.
-- **Transcript strip** — interim/parsed text directly under the button.
+- **Mic button** — centered, 72px, docked at the bottom of the screen (thumb zone).
+- **Transcript strip** — interim/parsed text directly above the button, inside the bottom dock.
+- **Undo toast** — a floating pill above the dock offering "Restore &lt;item&gt;?" / "Restore list?" for destructive actions.
 - **Suggestions** — a compact horizontal rail above the list ("Running low: milk · bread").
 - **List** — the main surface, grouped by category, each row showing checkbox, name, quantity, unit.
 - **Empty state** — a single friendly prompt ("Tap the mic and say 'add milk'").
@@ -41,7 +42,7 @@ Tailwind v4, tokens defined in `@theme` (see `src/app.css`).
 - **Color** — warm neutral canvas (`#faf9f7`), white surfaces, ink text (`#1c1917`), one fresh-green accent (`#16a34a`) used sparingly for the mic and check state. Category tags use muted secondary tints. Errors use amber (`#b45309`), not red, to stay friendly.
 - **Type** — system font stack (native, fast, no webfont request). Sizes from 13px (meta) to 20px (item names) to 32px (empty-state headline). Numbers tabular for quantities.
 - **Radius** — 12px cards, 9999px pills for the mic and tags.
-- **Elevation** — minimal; one subtle shadow on the sticky mic area, none elsewhere.
+- **Elevation** — minimal; one subtle shadow on the bottom dock, none elsewhere.
 - **Motion** — 150–250ms ease-out for state changes; the mic pulse is a gentle scale+opacity loop. Respects `prefers-reduced-motion`.
 
 ## Copy
