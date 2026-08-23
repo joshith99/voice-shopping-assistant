@@ -88,5 +88,5 @@ SvelteKit and needs no custom build command. Set `PUBLIC_SUPABASE_URL` and
 
 ## Links
 
-- Live demo: _(added after deploy)_
+- Live demo: https://voice-shopping-assistant-mu-swart.vercel.app
 - Write-up: [WRITEUP.md](WRITEUP.md)
