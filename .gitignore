@@ -1,0 +1,39 @@
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
+# Supabase local state (schema lives in /supabase, committed)
+.supabase
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Editor / agent tooling
+.idea/
+.vscode/
+.codex/
+.impeccable/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Test artifacts
+/playwright-report
+/test-results
+
+# Local assignment materials (not part of the shipped app)
+/Voice Command Shopping Assistant.md
+/Assignment Submission Usage Guidelines.md
