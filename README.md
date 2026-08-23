@@ -66,6 +66,19 @@ supabase/
   migrations/   schema + seed data
 ```
 
+## Deployment
+
+The app ships with `@sveltejs/adapter-vercel`. To deploy:
+
+```sh
+vercel        # link the project, then
+vercel --prod
+```
+
+Or connect the GitHub repository in the Vercel dashboard — the framework preset is
+SvelteKit and needs no custom build command. Set `PUBLIC_SUPABASE_URL` and
+`PUBLIC_SUPABASE_ANON_KEY` as environment variables for the optional backend.
+
 ## Documentation
 
 - [Architecture](ARCHITECTURE.md) — system design and key decisions
@@ -76,4 +89,4 @@ supabase/
 ## Links
 
 - Live demo: _(added after deploy)_
-- Write-up: _(see [WRITEUP.md](WRITEUP.md))_
+- Write-up: [WRITEUP.md](WRITEUP.md)

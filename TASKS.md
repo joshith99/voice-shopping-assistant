@@ -4,28 +4,27 @@ Outstanding work and planned changes. Checked items are done; keep this in sync
 as work lands. Inline `TODO` comments in code are for local, low-level follow-ups
 only.
 
-## In progress
+## Done
 
-- [ ] Voice pipeline — Web Speech API provider with live transcript + the five UI states (listening / recognizing / confirming / error).
+- [x] Voice pipeline — Web Speech API provider with live transcript and the five UI states.
+- [x] List management — add / remove / check off / change quantity, grouped by category.
+- [x] NLP intent parser — intents (add, remove, change, search, clear) + entities (item, quantity, unit, price range).
+- [x] Categorization dictionary.
+- [x] Suggestions — history-based "running low", seasonal, on sale, substitutes.
+- [x] Voice search — brand / size / price filters against the catalog.
+- [x] Deepgram BYOK — streaming provider + settings dialog for the key.
+- [x] Multilingual — language selector driving recognition and parsing (English, Hindi, Spanish).
+- [x] Supabase persistence — data layer + RLS migration, localStorage fallback.
+- [x] Seed catalog — bundled grocery catalog + substitutes.
+- [x] Tests — Vitest (parser, suggestions, data, catalog) + Playwright E2E (voice, typed, search).
+- [x] Write-up — `WRITEUP.md` (approach summary).
 
-## Backlog
+## Remaining
 
-- [ ] List management — add / remove / check off / change quantity, grouped by category, persisted through the data layer.
-- [ ] NLP intent parser — intents (add, remove, change, search, clear) + entities (item, quantity, unit, brand, size, price range).
-- [ ] Categorization dictionary — map item names to categories (dairy, produce, snacks, …).
-- [ ] Suggestions — history-based "running low", seasonal picks, substitutes.
-- [ ] Voice search — search the catalog with brand / size / price filters.
-- [ ] Deepgram BYOK — streaming provider + Settings screen for the key.
-- [ ] Multilingual — language selector driving both recognition and parsing dictionaries.
-- [ ] Supabase persistence — data-layer implementation + RLS migrations.
-- [ ] Seed catalog — public grocery dataset imported into `catalog` + `substitute` tables.
-- [ ] Tests — Vitest for `src/lib/nlp` and `src/lib/suggestions`; Playwright for the happy-path voice flow (mocked recognition).
-- [ ] Deploy — Vercel project, env vars, live URL.
-- [ ] Write-up — 200-word approach summary (`WRITEUP.md`) and final README links.
+- [ ] Deploy — push to Vercel (adapter-vercel is configured) and fill in the live URL in `README.md`.
+- [ ] Optional: set Supabase `PUBLIC_SUPABASE_URL` / `PUBLIC_SUPABASE_ANON_KEY` in Vercel for real persistence.
 
 ## Notes
 
-- `npm run test` / `npm run test:e2e` are wired for Vitest and Playwright; add the
-  actual test files alongside the code they cover.
-- Windows local `npm run build` hits the adapter-vercel symlink `EPERM`; verify
-  with `npm run check` + `npm run dev` locally, build on Vercel.
+- Windows local `npm run build` hits the adapter-vercel symlink `EPERM`; verify with `npm run check` + `npm run dev` locally, build on Vercel.
+- `catalog` and `substitutes` are bundled static seed in `src/lib/catalog/seed.ts` (fast, offline); only the list and purchase history persist to Supabase.

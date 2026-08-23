@@ -66,47 +66,35 @@ A single `Data` interface (`getList`, `saveList`, `addToHistory`, etc.) is imple
 ## Data model
 
 ```sql
-shopping_list (
+-- Supabase (Postgres + RLS, scoped by anonymous auth uid)
+list_items (
   id uuid pk,
-  created_at timestamptz
-)
-
-list_item (
-  id uuid pk,
-  list_id uuid references shopping_list,
+  user_id uuid references auth.users,
   name text,
   category text,          -- dairy | produce | snacks | bakery | beverages | ...
   quantity int,
   unit text,              -- item | bottle | kg | ...
   checked boolean,
-  position int
+  created_at timestamptz
 )
 
 purchase_history (
-  id uuid pk,
+  id bigint pk,
+  user_id uuid references auth.users,
   name text,
   category text,
   purchased_at timestamptz
 )
-
-catalog (
-  id uuid pk,
-  name text,
-  category text,
-  brand text,
-  size text,
-  price numeric,
-  season text,            -- 'spring' | 'summer' | 'autumn' | 'winter' | 'all'
-  on_sale boolean
-)
-
-substitute (
-  item text,
-  alternative text
-)
 ```
 
-`catalog` and `substitute` are seeded from a public grocery dataset at migration time. Suggestions are computed, not stored.
+Bundled in the client (`src/lib/catalog/seed.ts`), not in Postgres:
+
+```
+catalog (name, category, brand, size, price, season, on_sale)
+substitute (item -> alternative)
+```
+
+`catalog` and `substitute` are static reference data, so they are bundled in the client (`src/lib/catalog/seed.ts`) rather than fetched from Postgres — faster first paint, works offline, and keeps the search and suggestion paths independent of network. Only the user's own `shopping_list`, `list_item`, and `purchase_history` rows persist to Supabase. Suggestions are computed, never stored.
 
 ## Suggested-missing heuristic
 
