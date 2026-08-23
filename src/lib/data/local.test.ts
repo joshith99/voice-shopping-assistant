@@ -47,4 +47,11 @@ describe('local data', () => {
 		expect(data.getSetting('deepgramKey')).toBe('abc123');
 		expect(data.getSetting('missing')).toBeNull();
 	});
+
+	it('accepts a backdated purchase time', async () => {
+		const data = createLocalData(memoryStorage());
+		const when = '2026-08-01T00:00:00.000Z';
+		await data.addToHistory('milk', 'dairy', when);
+		expect((await data.getHistory())[0].purchasedAt).toBe(when);
+	});
 });

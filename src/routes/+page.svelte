@@ -2,11 +2,16 @@
 	import { onMount } from 'svelte';
 	import MicButton from '$lib/components/MicButton.svelte';
 	import ListItem from '$lib/components/ListItem.svelte';
+	import SuggestionRail from '$lib/components/SuggestionRail.svelte';
+	import { CATALOG, SUBSTITUTES } from '$lib/catalog/seed';
 	import { createLocalData } from '$lib/data/local';
-	import type { Data, ListItem as Item } from '$lib/data/types';
+	import type { Data, HistoryEntry, ListItem as Item } from '$lib/data/types';
 	import { categorize } from '$lib/nlp/categories';
 	import { parse } from '$lib/nlp/parse';
 	import type { Command } from '$lib/nlp/types';
+	import { runningLow } from '$lib/suggestions/history';
+	import { onSaleItems, seasonalItems } from '$lib/suggestions/seasonal';
+	import { substitutesFor } from '$lib/suggestions/substitutes';
 	import { speak } from '$lib/voice/speech-synthesis';
 	import type { VoiceState } from '$lib/voice/types';
 	import { createWebSpeechProvider } from '$lib/voice/web-speech';
@@ -24,6 +29,7 @@
 	];
 
 	let items = $state<Item[]>([]);
+	let history = $state<HistoryEntry[]>([]);
 	let voiceState = $state<VoiceState>('idle');
 	let transcript = $state('');
 	let feedback = $state('');
@@ -37,6 +43,25 @@
 	let feedbackTimer: ReturnType<typeof setTimeout> | undefined;
 
 	const listening = $derived(voiceState === 'listening' || voiceState === 'recognizing');
+
+	const itemNames = $derived(items.map((item) => item.name));
+
+	const suggestions = $derived.by(() => {
+		const result: { kind: string; name: string }[] = [];
+		for (const low of runningLow(history, new Date())) {
+			result.push({ kind: 'Running low', name: low.name });
+		}
+		for (const item of onSaleItems(CATALOG)) {
+			result.push({ kind: 'On sale', name: item.name });
+		}
+		for (const item of seasonalItems(CATALOG, new Date().getMonth() + 1)) {
+			result.push({ kind: 'In season', name: item.name });
+		}
+		for (const alternative of substitutesFor(itemNames, SUBSTITUTES)) {
+			result.push({ kind: 'Try instead', name: alternative });
+		}
+		return result.slice(0, 8);
+	});
 
 	const groups = $derived.by(() => {
 		const byCategory = new Map<string, Item[]>();
@@ -55,8 +80,30 @@
 		data = createLocalData();
 		data.getList().then((loaded) => (items = loaded));
 		language = data.getSetting('language') ?? 'en-US';
+		void seedHistory();
 		initProvider();
 	});
+
+	const DEMO_HISTORY: { name: string; category: string; daysAgo: number }[] = [
+		{ name: 'milk', category: 'dairy', daysAgo: 10 },
+		{ name: 'bread', category: 'bakery', daysAgo: 9 },
+		{ name: 'spinach', category: 'produce', daysAgo: 7 },
+		{ name: 'toothpaste', category: 'household', daysAgo: 35 }
+	];
+
+	async function seedHistory() {
+		if (!data) return;
+		const existing = await data.getHistory();
+		if (existing.length > 0) {
+			history = existing;
+			return;
+		}
+		for (const entry of DEMO_HISTORY) {
+			const when = new Date(Date.now() - entry.daysAgo * 86400000).toISOString();
+			await data.addToHistory(entry.name, entry.category, when);
+		}
+		history = await data.getHistory();
+	}
 
 	function initProvider() {
 		provider = createWebSpeechProvider(
@@ -126,9 +173,10 @@
 
 	function add(command: Command) {
 		if (!command.item) return setFeedback("Sorry, I didn't catch the item.");
-		const name = command.item;
-		const quantity = command.quantity?.value ?? 1;
-		const unit = command.quantity?.unit ?? 'item';
+		addByName(command.item, command.quantity?.value ?? 1, command.quantity?.unit ?? 'item');
+	}
+
+	function addByName(name: string, quantity = 1, unit = 'item') {
 		const category = categorize(name);
 
 		const existing = items.find((item) => item.name === name && !item.checked);
@@ -142,6 +190,7 @@
 		}
 
 		void data?.addToHistory(name, category);
+		history = [...history, { name, category, purchasedAt: new Date().toISOString() }];
 		persist();
 		setFeedback(`Added ${name}`);
 	}
@@ -268,6 +317,8 @@
 				bind:value={manualText}
 			/>
 		</form>
+
+		<SuggestionRail {suggestions} onAdd={addByName} />
 
 		{#if items.length === 0}
 			<div class="flex flex-1 flex-col items-center justify-center gap-2 py-16 text-center">

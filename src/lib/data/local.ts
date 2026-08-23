@@ -41,9 +41,13 @@ export function createLocalData(storage?: StorageLike): Data {
 		return raw ? (JSON.parse(raw) as HistoryEntry[]) : [];
 	};
 
-	const addToHistory = async (name: string, category: string): Promise<void> => {
+	const addToHistory = async (
+		name: string,
+		category: string,
+		purchasedAt?: string
+	): Promise<void> => {
 		const history = await getHistory();
-		history.push({ name, category, purchasedAt: new Date().toISOString() });
+		history.push({ name, category, purchasedAt: purchasedAt ?? new Date().toISOString() });
 		store.setItem(HISTORY_KEY, JSON.stringify(history));
 	};
 
