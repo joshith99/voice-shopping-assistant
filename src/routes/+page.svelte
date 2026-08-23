@@ -46,10 +46,12 @@
 	let searchResults = $state<{ query: string; items: CatalogItem[] } | null>(null);
 	let settingsOpen = $state(false);
 	let deepgramKey = $state('');
+	let lastCleared = $state<Item[] | null>(null);
 
 	let data: Data | undefined;
 	let provider: ReturnType<typeof createWebSpeechProvider> | undefined;
 	let feedbackTimer: ReturnType<typeof setTimeout> | undefined;
+	let undoTimer: ReturnType<typeof setTimeout> | undefined;
 
 	const listening = $derived(voiceState === 'listening' || voiceState === 'recognizing');
 
@@ -57,19 +59,19 @@
 
 	const suggestions = $derived.by(() => {
 		const result: { kind: string; name: string }[] = [];
-		for (const low of runningLow(history, new Date())) {
+		for (const low of runningLow(history, new Date()).slice(0, 2)) {
 			result.push({ kind: 'Running low', name: low.name });
 		}
-		for (const item of onSaleItems(CATALOG)) {
+		for (const item of onSaleItems(CATALOG).slice(0, 3)) {
 			result.push({ kind: 'On sale', name: item.name });
 		}
-		for (const item of seasonalItems(CATALOG, new Date().getMonth() + 1)) {
+		for (const item of seasonalItems(CATALOG, new Date().getMonth() + 1).slice(0, 2)) {
 			result.push({ kind: 'In season', name: item.name });
 		}
-		for (const alternative of substitutesFor(itemNames, SUBSTITUTES)) {
+		for (const alternative of substitutesFor(itemNames, SUBSTITUTES).slice(0, 2)) {
 			result.push({ kind: 'Try instead', name: alternative });
 		}
-		return result.slice(0, 8);
+		return result.slice(0, 6);
 	});
 
 	const groups = $derived.by(() => {
@@ -83,6 +85,10 @@
 			category,
 			items: byCategory.get(category) ?? []
 		})).filter((group) => group.items.length > 0);
+	});
+
+	$effect(() => {
+		document.documentElement.lang = language;
 	});
 
 	onMount(() => {
@@ -247,9 +253,21 @@
 	}
 
 	function clearList() {
+		lastCleared = items;
 		items = [];
 		persist();
 		setFeedback('Cleared the list.');
+		clearTimeout(undoTimer);
+		undoTimer = setTimeout(() => (lastCleared = null), 10000);
+	}
+
+	function undoClear() {
+		if (!lastCleared?.length) return;
+		items = lastCleared;
+		lastCleared = null;
+		clearTimeout(undoTimer);
+		persist();
+		setFeedback('Restored the list.');
 	}
 
 	function persist() {
@@ -359,10 +377,10 @@
 	</header>
 
 	<main class="flex flex-1 flex-col px-5 pb-10 pt-6">
-		<div class="flex flex-col items-center gap-4 py-2">
+		<div class="sticky top-0 z-10 -mx-5 flex flex-col items-center gap-4 bg-canvas px-5 py-2">
 			<MicButton state={voiceState} onclick={toggleMic} />
 
-			<p class="min-h-6 text-center text-[15px] leading-snug">
+			<p class="min-h-6 text-center text-[15px] leading-snug" aria-live="polite">
 				{#if transcript}
 					<span class="text-ink">“{transcript}”</span>
 				{:else if error}
@@ -373,12 +391,22 @@
 					<span class="text-muted">Tap the mic and say “add milk”</span>
 				{/if}
 			</p>
+
+			{#if lastCleared?.length}
+				<button
+					type="button"
+					class="rounded-full border border-line bg-surface px-3 py-1 text-sm text-ink hover:border-accent"
+					onclick={undoClear}
+				>
+					Undo
+				</button>
+			{/if}
 		</div>
 
 		<form onsubmit={onManualSubmit} class="mb-6">
 			<input
 				type="text"
-				class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-[16px] placeholder:text-muted/70 focus:border-accent"
+				class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-[16px] placeholder:text-muted focus:border-accent"
 				placeholder="Or type an item, e.g. “2 bottles of water”"
 				bind:value={manualText}
 			/>
@@ -397,7 +425,7 @@
 
 		{#if items.length === 0}
 			<div class="flex flex-1 flex-col items-center justify-center gap-2 py-16 text-center">
-				<p class="text-2xl font-semibold tracking-tight">Your list is empty</p>
+				<h2 class="text-2xl font-semibold tracking-tight">Your list is empty</h2>
 				<p class="text-muted">Speak or type an item to get started.</p>
 			</div>
 		{:else}

@@ -40,28 +40,24 @@
 		</button>
 	</header>
 
-	{#if results.length === 0}
-		<p class="text-sm text-muted">No items matched. Try a broader search.</p>
-	{:else}
-		<ul class="divide-y divide-line">
-			{#each results as item (item.name)}
-				<li class="flex items-center gap-3 py-2.5">
-					<div class="min-w-0 flex-1">
-						<p class="truncate text-[15px]">{item.name}</p>
-						<p class="text-sm text-muted">
-							{item.brand} · {item.size}
-						</p>
-					</div>
-					<span class="tabular text-sm text-muted">${item.price.toFixed(2)}</span>
-					<button
-						type="button"
-						class="shrink-0 rounded-full bg-accent px-3 py-1 text-sm font-medium text-white hover:bg-accent-ink"
-						onclick={() => onAdd(item.name)}
-					>
-						Add
-					</button>
-				</li>
-			{/each}
-		</ul>
-	{/if}
+	<ul class="divide-y divide-line">
+		{#each results as item (item.name)}
+			<li class="flex items-center gap-3 py-2.5">
+				<div class="min-w-0 flex-1">
+					<p class="truncate text-[15px]">{item.name}</p>
+					<p class="text-sm text-muted">
+						{item.brand} · {item.size}
+					</p>
+				</div>
+				<span class="tabular text-sm text-muted">${item.price.toFixed(2)}</span>
+				<button
+					type="button"
+					class="shrink-0 rounded-full bg-accent px-3 py-1 text-sm font-medium text-white hover:bg-accent-ink"
+					onclick={() => onAdd(item.name)}
+				>
+					Add
+				</button>
+			</li>
+		{/each}
+	</ul>
 </section>

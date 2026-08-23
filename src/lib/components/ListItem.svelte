@@ -33,7 +33,7 @@
 		class="h-5 w-5 shrink-0 cursor-pointer rounded accent-accent"
 		checked={item.checked}
 		onchange={onToggle}
-		aria-label={`${item.checked ? 'Mark' : 'Unmark'} ${item.name}`}
+		aria-label={`${item.checked ? 'Unmark' : 'Mark'} ${item.name}`}
 	/>
 
 	<span
@@ -50,7 +50,7 @@
 
 	<button
 		type="button"
-		class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted opacity-0 transition-opacity hover:bg-canvas hover:text-ink focus-visible:opacity-100 group-hover:opacity-100"
+		class="remove grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted opacity-0 transition-opacity hover:bg-canvas hover:text-ink focus-visible:opacity-100 group-hover:opacity-100"
 		onclick={onRemove}
 		aria-label={`Remove ${item.name}`}
 	>
@@ -67,3 +67,11 @@
 		</svg>
 	</button>
 </li>
+
+<style>
+	@media (hover: none) {
+		.remove {
+			opacity: 1;
+		}
+	}
+</style>

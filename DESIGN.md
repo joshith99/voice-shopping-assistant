@@ -38,7 +38,7 @@ Single column, max-width container, phone-first:
 
 Tailwind v4, tokens defined in `@theme` (see `src/app.css`).
 
-- **Color** — warm neutral canvas (`#faf9f7`), white surfaces, ink text (`#1c1917`), one fresh-green accent (`#16a34a`) used sparingly for the mic and check state. Category tags use muted secondary tints. Errors use amber (`#d97706`), not red, to stay friendly.
+- **Color** — warm neutral canvas (`#faf9f7`), white surfaces, ink text (`#1c1917`), one fresh-green accent (`#16a34a`) used sparingly for the mic and check state. Category tags use muted secondary tints. Errors use amber (`#b45309`), not red, to stay friendly.
 - **Type** — system font stack (native, fast, no webfont request). Sizes from 13px (meta) to 20px (item names) to 32px (empty-state headline). Numbers tabular for quantities.
 - **Radius** — 12px cards, 9999px pills for the mic and tags.
 - **Elevation** — minimal; one subtle shadow on the sticky mic area, none elsewhere.
