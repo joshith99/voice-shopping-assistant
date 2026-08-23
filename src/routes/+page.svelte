@@ -152,7 +152,7 @@
 	}
 
 	function handleCommand(text: string) {
-		const command = parse(text);
+		const command = parse(text, language);
 		if (command.intent === 'unknown') {
 			setFeedback("Sorry, I didn't understand that.");
 			return;
