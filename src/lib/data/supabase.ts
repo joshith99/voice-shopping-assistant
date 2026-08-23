@@ -8,10 +8,12 @@ export function createSupabaseData(url: string, anonKey: string): Data {
 	let authReady: Promise<void> | null = null;
 
 	const ensureAuth = (): Promise<void> => {
-		authReady ??= client.auth
-			.signInAnonymously()
-			.then(() => undefined)
-			.catch(() => undefined);
+		authReady ??= (async () => {
+			const { data } = await client.auth.getSession();
+			if (!data.session) {
+				await client.auth.signInAnonymously();
+			}
+		})().catch(() => undefined);
 		return authReady;
 	};
 
