@@ -2,8 +2,11 @@
 	import { onMount } from 'svelte';
 	import MicButton from '$lib/components/MicButton.svelte';
 	import ListItem from '$lib/components/ListItem.svelte';
+	import SearchResults from '$lib/components/SearchResults.svelte';
 	import SuggestionRail from '$lib/components/SuggestionRail.svelte';
 	import { CATALOG, SUBSTITUTES } from '$lib/catalog/seed';
+	import { searchCatalog } from '$lib/catalog/search';
+	import type { CatalogItem } from '$lib/catalog/seed';
 	import { createLocalData } from '$lib/data/local';
 	import type { Data, HistoryEntry, ListItem as Item } from '$lib/data/types';
 	import { categorize } from '$lib/nlp/categories';
@@ -37,6 +40,7 @@
 	let manualText = $state('');
 	let language = $state('en-US');
 	let highlightId = $state<string | null>(null);
+	let searchResults = $state<{ query: string; items: CatalogItem[] } | null>(null);
 
 	let data: Data | undefined;
 	let provider: ReturnType<typeof createWebSpeechProvider> | undefined;
@@ -166,9 +170,22 @@
 				return change(command);
 			case 'clear':
 				return clearList();
+			case 'search':
+				return search(command);
 			default:
-				return setFeedback('Search is on the way.');
+				return setFeedback("Sorry, I didn't understand that.");
 		}
+	}
+
+	function search(command: Command) {
+		const query = command.item ?? '';
+		const items = searchCatalog(CATALOG, query, command.filter ?? {});
+		if (items.length === 0) {
+			setFeedback(`No matches for “${query}”.`);
+			return;
+		}
+		searchResults = { query, items };
+		setFeedback(`Found ${items.length} result${items.length === 1 ? '' : 's'}.`);
 	}
 
 	function add(command: Command) {
@@ -317,6 +334,15 @@
 				bind:value={manualText}
 			/>
 		</form>
+
+		{#if searchResults}
+			<SearchResults
+				query={searchResults.query}
+				results={searchResults.items}
+				onAdd={addByName}
+				onClose={() => (searchResults = null)}
+			/>
+		{/if}
 
 		<SuggestionRail {suggestions} onAdd={addByName} />
 
