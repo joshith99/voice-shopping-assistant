@@ -68,16 +68,14 @@ supabase/
 
 ## Deployment
 
-The app ships with `@sveltejs/adapter-vercel`. To deploy:
+The app ships with `@sveltejs/adapter-vercel` and is connected to GitHub, so every
+push to `main` triggers a production deploy automatically (pull requests get
+preview deploys). `PUBLIC_SUPABASE_URL` and `PUBLIC_SUPABASE_ANON_KEY` are set in
+Vercel for the optional backend. To deploy manually:
 
 ```sh
-vercel        # link the project, then
 vercel --prod
 ```
-
-Or connect the GitHub repository in the Vercel dashboard — the framework preset is
-SvelteKit and needs no custom build command. Set `PUBLIC_SUPABASE_URL` and
-`PUBLIC_SUPABASE_ANON_KEY` as environment variables for the optional backend.
 
 ## Documentation
 
