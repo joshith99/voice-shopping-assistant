@@ -11,7 +11,7 @@
 {#if suggestions.length > 0}
 	<section class="mb-6" aria-label="Suggestions">
 		<h2 class="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-muted">Suggestions</h2>
-		<ul class="flex gap-2 overflow-x-auto pb-1">
+		<ul class="flex flex-wrap gap-2 pb-1">
 			{#each suggestions as suggestion (suggestion.kind + suggestion.name)}
 				<li class="shrink-0">
 					<button

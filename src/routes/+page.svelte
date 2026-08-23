@@ -46,7 +46,9 @@
 	let searchResults = $state<{ query: string; items: CatalogItem[] } | null>(null);
 	let settingsOpen = $state(false);
 	let deepgramKey = $state('');
-	let lastCleared = $state<Item[] | null>(null);
+	type Undoable = { kind: 'clear'; items: Item[] } | { kind: 'remove'; item: Item; index: number };
+
+	let undo = $state<Undoable | null>(null);
 
 	let data: Data | undefined;
 	let provider: ReturnType<typeof createWebSpeechProvider> | undefined;
@@ -71,7 +73,7 @@
 		for (const alternative of substitutesFor(itemNames, SUBSTITUTES).slice(0, 2)) {
 			result.push({ kind: 'Try instead', name: alternative });
 		}
-		return result.slice(0, 6);
+		return result.slice(0, 4);
 	});
 
 	const groups = $derived.by(() => {
@@ -232,11 +234,7 @@
 		if (!command.item) return setFeedback("Sorry, I didn't catch the item.");
 		const index = items.findIndex((item) => item.name === command.item);
 		if (index === -1) return setFeedback(`I don't see ${command.item} on the list.`);
-
-		const [removed] = items.splice(index, 1);
-		items = items;
-		persist();
-		setFeedback(`Removed ${removed.name}`);
+		removeAt(index);
 	}
 
 	function change(command: Command) {
@@ -253,21 +251,40 @@
 	}
 
 	function clearList() {
-		lastCleared = items;
+		if (items.length > 0) undo = { kind: 'clear', items };
 		items = [];
 		persist();
 		setFeedback('Cleared the list.');
-		clearTimeout(undoTimer);
-		undoTimer = setTimeout(() => (lastCleared = null), 10000);
+		scheduleUndoReset();
 	}
 
-	function undoClear() {
-		if (!lastCleared?.length) return;
-		items = lastCleared;
-		lastCleared = null;
+	function removeAt(index: number) {
+		const [removed] = items.splice(index, 1);
+		items = items;
+		undo = { kind: 'remove', item: removed, index };
+		persist();
+		setFeedback(`Removed ${removed.name}`);
+		scheduleUndoReset();
+	}
+
+	function undoLast() {
+		if (!undo) return;
+		if (undo.kind === 'clear') {
+			items = undo.items;
+			setFeedback('Restored the list.');
+		} else {
+			items.splice(Math.min(undo.index, items.length), 0, undo.item);
+			items = items;
+			setFeedback(`Restored ${undo.item.name}`);
+		}
+		undo = null;
 		clearTimeout(undoTimer);
 		persist();
-		setFeedback('Restored the list.');
+	}
+
+	function scheduleUndoReset() {
+		clearTimeout(undoTimer);
+		undoTimer = setTimeout(() => (undo = null), 5000);
 	}
 
 	function persist() {
@@ -280,11 +297,13 @@
 		item.checked = !item.checked;
 		items = items;
 		persist();
+		setFeedback(item.checked ? `Marked ${item.name}` : `Unmarked ${item.name}`);
 	}
 
 	function removeItem(id: string) {
-		items = items.filter((item) => item.id !== id);
-		persist();
+		const index = items.findIndex((item) => item.id === id);
+		if (index === -1) return;
+		removeAt(index);
 	}
 
 	function onManualSubmit(event: SubmitEvent) {
@@ -392,11 +411,11 @@
 				{/if}
 			</p>
 
-			{#if lastCleared?.length}
+			{#if undo}
 				<button
 					type="button"
 					class="rounded-full border border-line bg-surface px-3 py-1 text-sm text-ink hover:border-accent"
-					onclick={undoClear}
+					onclick={undoLast}
 				>
 					Undo
 				</button>
@@ -408,9 +427,21 @@
 				type="text"
 				class="w-full rounded-xl border border-line bg-surface px-4 py-3 text-[16px] placeholder:text-muted focus:border-accent"
 				placeholder="Or type an item, e.g. “2 bottles of water”"
+				aria-label="Add item by typing"
 				bind:value={manualText}
 			/>
 		</form>
+
+		<details class="mb-6 rounded-xl border border-line bg-surface px-4 py-3">
+			<summary class="cursor-pointer text-sm font-medium text-ink">What can I say?</summary>
+			<ul class="mt-3 space-y-1 text-sm text-muted">
+				<li>“add two bottles of water”</li>
+				<li>“remove milk”</li>
+				<li>“change milk to 3 cartons”</li>
+				<li>“clear the list”</li>
+				<li>“find toothpaste under $5”</li>
+			</ul>
+		</details>
 
 		{#if searchResults}
 			<SearchResults
@@ -429,6 +460,16 @@
 				<p class="text-muted">Speak or type an item to get started.</p>
 			</div>
 		{:else}
+			<div class="mb-4 flex items-center justify-between">
+				<p class="text-sm text-muted">{items.length} {items.length === 1 ? 'item' : 'items'}</p>
+				<button
+					type="button"
+					class="text-sm font-medium text-warn hover:text-ink"
+					onclick={clearList}
+				>
+					Clear list
+				</button>
+			</div>
 			<ul class="space-y-7">
 				{#each groups as group (group.category)}
 					<li>
