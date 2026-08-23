@@ -21,7 +21,7 @@ only.
 
 ## Remaining
 
-- [ ] Deploy — push to Vercel (adapter-vercel is configured) and fill in the live URL in `README.md`.
+- [x] Deploy — deployed to Vercel: `https://voice-shopping-assistant-mu-swart.vercel.app`.
 - [ ] Optional: set Supabase `PUBLIC_SUPABASE_URL` / `PUBLIC_SUPABASE_ANON_KEY` in Vercel for real persistence.
 
 ## Notes
