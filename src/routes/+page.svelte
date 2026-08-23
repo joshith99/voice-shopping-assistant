@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { env } from '$env/dynamic/public';
 	import MicButton from '$lib/components/MicButton.svelte';
 	import ListItem from '$lib/components/ListItem.svelte';
 	import SearchResults from '$lib/components/SearchResults.svelte';
@@ -8,8 +9,8 @@
 	import { CATALOG, SUBSTITUTES } from '$lib/catalog/seed';
 	import { searchCatalog } from '$lib/catalog/search';
 	import type { CatalogItem } from '$lib/catalog/seed';
-	import { createLocalData } from '$lib/data/local';
-	import type { Data, HistoryEntry, ListItem as Item } from '$lib/data/types';
+	import { createData } from '$lib/data';
+	import type { Data, HistoryEntry, ListItem as Item } from '$lib/data';
 	import { categorize } from '$lib/nlp/categories';
 	import { parse } from '$lib/nlp/parse';
 	import type { Command } from '$lib/nlp/types';
@@ -85,7 +86,10 @@
 	});
 
 	onMount(() => {
-		data = createLocalData();
+		data = createData({
+			supabaseUrl: env.PUBLIC_SUPABASE_URL,
+			supabaseAnonKey: env.PUBLIC_SUPABASE_ANON_KEY
+		});
 		data.getList().then((loaded) => (items = loaded));
 		language = data.getSetting('language') ?? 'en-US';
 		deepgramKey = data.getSetting('deepgramKey') ?? '';
