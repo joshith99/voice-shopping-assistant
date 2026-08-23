@@ -4,7 +4,7 @@
 
 create table public.list_items (
   id uuid primary key,
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   name text not null,
   category text not null default 'other',
   quantity integer not null default 1,
@@ -23,7 +23,7 @@ create policy "users manage their own list items"
 
 create table public.purchase_history (
   id bigint generated always as identity primary key,
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   name text not null,
   category text not null default 'other',
   purchased_at timestamptz not null default now()
