@@ -33,6 +33,7 @@ vite.config.ts.timestamp-*
 # Test artifacts
 /playwright-report
 /test-results
+/.playwright-mcp
 
 # Local assignment materials (not part of the shipped app)
 /Voice Command Shopping Assistant.md
