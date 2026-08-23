@@ -3,6 +3,7 @@
 	import MicButton from '$lib/components/MicButton.svelte';
 	import ListItem from '$lib/components/ListItem.svelte';
 	import SearchResults from '$lib/components/SearchResults.svelte';
+	import Settings from '$lib/components/Settings.svelte';
 	import SuggestionRail from '$lib/components/SuggestionRail.svelte';
 	import { CATALOG, SUBSTITUTES } from '$lib/catalog/seed';
 	import { searchCatalog } from '$lib/catalog/search';
@@ -15,6 +16,7 @@
 	import { runningLow } from '$lib/suggestions/history';
 	import { onSaleItems, seasonalItems } from '$lib/suggestions/seasonal';
 	import { substitutesFor } from '$lib/suggestions/substitutes';
+	import { createDeepgramProvider } from '$lib/voice/deepgram';
 	import { speak } from '$lib/voice/speech-synthesis';
 	import type { VoiceState } from '$lib/voice/types';
 	import { createWebSpeechProvider } from '$lib/voice/web-speech';
@@ -41,6 +43,8 @@
 	let language = $state('en-US');
 	let highlightId = $state<string | null>(null);
 	let searchResults = $state<{ query: string; items: CatalogItem[] } | null>(null);
+	let settingsOpen = $state(false);
+	let deepgramKey = $state('');
 
 	let data: Data | undefined;
 	let provider: ReturnType<typeof createWebSpeechProvider> | undefined;
@@ -84,6 +88,7 @@
 		data = createLocalData();
 		data.getList().then((loaded) => (items = loaded));
 		language = data.getSetting('language') ?? 'en-US';
+		deepgramKey = data.getSetting('deepgramKey') ?? '';
 		void seedHistory();
 		initProvider();
 	});
@@ -110,20 +115,21 @@
 	}
 
 	function initProvider() {
-		provider = createWebSpeechProvider(
-			{
-				onState: (s) => (voiceState = s),
-				onResult: (text, isFinal) => {
-					transcript = text;
-					if (isFinal) handleCommand(text);
-				},
-				onError: (reason) => {
-					error = friendlyError(reason);
-					voiceState = 'error';
-				}
+		const callbacks = {
+			onState: (s: VoiceState) => (voiceState = s),
+			onResult: (text: string, isFinal: boolean) => {
+				transcript = text;
+				if (isFinal) handleCommand(text);
 			},
-			{ lang: language }
-		);
+			onError: (reason: string) => {
+				error = friendlyError(reason);
+				voiceState = 'error';
+			}
+		};
+
+		provider = deepgramKey
+			? createDeepgramProvider(callbacks, { apiKey: deepgramKey, lang: language })
+			: createWebSpeechProvider(callbacks, { lang: language });
 	}
 
 	function friendlyError(reason: string): string {
@@ -272,6 +278,21 @@
 		initProvider();
 	}
 
+	function saveKey(key: string) {
+		deepgramKey = key;
+		if (key) data?.setSetting('deepgramKey', key);
+		else data?.setSetting('deepgramKey', '');
+		settingsOpen = false;
+		initProvider();
+	}
+
+	function clearKey() {
+		deepgramKey = '';
+		data?.setSetting('deepgramKey', '');
+		settingsOpen = false;
+		initProvider();
+	}
+
 	function setFeedback(message: string) {
 		feedback = message;
 		voiceState = 'confirming';
@@ -297,16 +318,40 @@
 <div class="mx-auto flex min-h-dvh w-full max-w-xl flex-col">
 	<header class="flex items-center justify-between px-5 pt-5">
 		<h1 class="text-lg font-semibold tracking-tight">Voice Shop</h1>
-		<select
-			class="rounded-lg border border-line bg-surface px-2 py-1.5 text-sm text-muted focus:border-accent"
-			bind:value={language}
-			onchange={onLanguageChange}
-			aria-label="Recognition language"
-		>
-			<option value="en-US">English</option>
-			<option value="hi-IN">हिन्दी</option>
-			<option value="es-ES">Español</option>
-		</select>
+		<div class="flex items-center gap-2">
+			<select
+				class="rounded-lg border border-line bg-surface px-2 py-1.5 text-sm text-muted focus:border-accent"
+				bind:value={language}
+				onchange={onLanguageChange}
+				aria-label="Recognition language"
+			>
+				<option value="en-US">English</option>
+				<option value="hi-IN">हिन्दी</option>
+				<option value="es-ES">Español</option>
+			</select>
+			<button
+				type="button"
+				class="grid h-9 w-9 place-items-center rounded-lg text-muted hover:bg-canvas hover:text-ink"
+				onclick={() => (settingsOpen = true)}
+				aria-label="Settings"
+			>
+				<svg
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="1.8"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					class="h-5 w-5"
+					aria-hidden="true"
+				>
+					<circle cx="12" cy="12" r="3" />
+					<path
+						d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+					/>
+				</svg>
+			</button>
+		</div>
 	</header>
 
 	<main class="flex flex-1 flex-col px-5 pb-10 pt-6">
@@ -374,3 +419,12 @@
 		{/if}
 	</main>
 </div>
+
+{#if settingsOpen}
+	<Settings
+		apiKey={deepgramKey}
+		onSave={saveKey}
+		onClear={clearKey}
+		onClose={() => (settingsOpen = false)}
+	/>
+{/if}
