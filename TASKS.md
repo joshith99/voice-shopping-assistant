@@ -22,7 +22,7 @@ only.
 ## Remaining
 
 - [x] Deploy — deployed to Vercel: `https://voice-shopping-assistant-mu-swart.vercel.app`.
-- [ ] Optional: set Supabase `PUBLIC_SUPABASE_URL` / `PUBLIC_SUPABASE_ANON_KEY` in Vercel for real persistence.
+- [x] Supabase backend — env vars set, tables + RLS migrated, anonymous sign-ins enabled, persistence verified.
 
 ## Notes
 
