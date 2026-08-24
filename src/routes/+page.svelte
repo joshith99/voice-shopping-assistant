@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { fade } from 'svelte/transition';
 	import { env } from '$env/dynamic/public';
 	import MicButton from '$lib/components/MicButton.svelte';
 	import ListItem from '$lib/components/ListItem.svelte';
@@ -476,6 +477,7 @@
 		{#if undo}
 			<div
 				class="mb-2 flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-4 py-2 shadow-lg"
+				transition:fade
 			>
 				<span class="text-sm text-ink">{undoLabel}</span>
 				<button
